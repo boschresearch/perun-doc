@@ -1,5 +1,5 @@
 @startuml seq_node_sdk_api
-Title Sequence Diagram - Interaction amongst node, sdk and api.
+Title Sequence Diagram - Interaction among node, sdk and api.
 
 actor alice
 entity "Alice's\nPerun Node" as alice_node
@@ -83,7 +83,14 @@ group Transact: Receive Payment
 alice_node <-[#DarkOliveGreen] sdk: UpdateHandler\n(callback)
 alice_node [#Crimson]-> alice_node: Push UpdateResponder\nto UpdateResponders
 opt if Final Update
-alice_node [#Crimson]-> alice_node: Lock channel in Channels (use bool)
+alice_node [#Crimson]-> alice_node: ChannelLock = Finalized.
+alice_node [#Crimson]-> alice_node: Start Settle time
+Note over alice_node #LightGray
+Wait for channel to be settled by peer until
+2 x TxTimeout, if no watcher is still running,
+initialize settle.
+endnote
+
 'if
 end
 alice <-[#DarkBlue] alice_node: Receive Payment\n<PaymentNotification>
@@ -108,9 +115,10 @@ end
 end
 
 group SETTLE PHASE
+
 group Close Channel: Collaborative or Non Collaborative
 alice [#DarkBlue]-> alice_node: Close Channel\n<CloseChannelRequest>
-alice_node [#Crimson]-> alice_node: Lock channel in Channels (use bool)
+alice_node [#Crimson]-> alice_node: ChannelLock = Closed.
 Note over alice_node #LightGray
 Called when user / sdk sends a final update.
 Once locked, State Update cannot be called
@@ -124,37 +132,36 @@ Response from UpdateBy:
 Difference will be only in return time of Settle.
 endnote
 alice_node [#DarkOliveGreen]-> sdk: Channel.Settle
+alice_node [#DarkOliveGreen]-> sdk: Channel.Close
 alice <-[#DarkBlue] alice_node: Close Channel\n<CloseChannelResponse>
 'group
 end
-'group
+
+group Channel Closed by Peer (Collaborative or Non Collaborative)
+
+alice_node <-[#DarkOliveGreen] sdk: channel.Watch returns
+alt if ChannelLock == Closed (Closed initiated by user)
+alice_node [#Crimson]-> alice_node: Log a message & Ignore.
+else if ChannelLock == Unlocked or Finalized
+alice_node [#Crimson]-> alice_node: ChannelLock = Closed.
+alice_node [#Crimson]-> alice_node: Fetch last known state of channel.
+alice_node [#DarkOliveGreen]-> sdk: Channel.Close
+alice <-[#DarkBlue] alice_node: Close Channel\n<ChannelClosedNotification>
+Note over alice_node #LightGray
+Watch returns with error = nil if channel was successfully withdrawn.
+If it returns with error, lock the channel and notify the user with error message.
+Because no specific errors are define by the SDK.
+endnote
+'alt
 end
 
 
+'group
+end
+'group
+end
 
-
-' group Channel Dispute: Invalid State Registered
-' blockchain <-[#Crimson] bob_node: State Register (Invalid)
-' alice_node <-[#Fuchsia] blockchain: State Registered
-' alice_node [#Fuchsia]-> alice_node: Invalid State Registered
-' alice_node [#Crimson]-> blockchain: State Register (Latest)
-' alice_node <[#Fuchsia]- blockchain: State Registered
-' blockchain [#Fuchsia]-> bob_node: State Registered
-' ...
-' Note over blockchain
-' Channel Timeout
-' endnote
-' ...
-' alice_node [#Crimson]-> blockchain: Settle
-' alice_node [#Crimson]-> blockchain: Withdraw Funds
-' blockchain <-[#Crimson] bob_node: Withdraw Funds
-' alice <-[#DarkBlue] alice_node: Channel Closed\n<ChannelClosedNotification>
-' 'group
-' end
-' 'group
-' end
-
-Note over alice_node, sdk #LightGrey
+Note over alice, sdk #LightGrey
 DataStructure: Channels:
     map of channelID to
     struct with
@@ -165,6 +172,12 @@ DataStructure: Channels:
 DataStructure: UpdateResponders: nested map of version to Reponsders against channelID in Channels
 
 DataStructure: ProposalResponders: map of proposal id to Reponsders
+
+ChannelLock: Enum (Unlocked, Finalized, Locked)
+- Unlocked: Open for transactions.
+- Finalized: Final state sent by peer.
+- Locked: Closed for transactions.
+
 endnote
 
 @enduml
