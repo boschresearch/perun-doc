@@ -1,38 +1,43 @@
 .. SPDX-FileCopyrightText: 2020 Hyperledger
    SPDX-License-Identifier: CC-BY-4.0
 
-   Perun-node documentation master file, created by
+   perun-doc documentation master file, created by
    sphinx-quickstart on Thu May 17 17:20:50 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-   
+
 Introduction
 =============
 
 Perun
 -----
 
-2nd Layer Scaling
------------------
+The perun protocol
+------------------
 
-State Channels
-``````````````
+Perun’s state-channel virtualization
+````````````````````````````````````
 
-Phase 1: Open
-^^^^^^^^^^^^^
+Blockchain-agnostic
+```````````````````
 
-Phase 2: Transact
-^^^^^^^^^^^^^^^^^
+Interoperability
+````````````````
 
-Phase 3: Register
-^^^^^^^^^^^^^^^^^
+High security
+`````````````
 
-Phase 4: Execute
-^^^^^^^^^^^^^^^^
+The Hyperledger Labs Project
+----------------------------
 
+perun-eth-contracts
+```````````````````
 go-Perun
---------
-
+`````````
 Perun-node
-----------
+``````````
+Current functionalities available
+`````````````````````````````````
+Features on Roadmap
+```````````````````
