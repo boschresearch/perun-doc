@@ -16,10 +16,10 @@ actor alice
 left to right direction
 
 package computer {
-    (Prepare blockchain node\n[Run own instance or\nuse external service]) as prep_bc
-    (Provide\npeer ID file) as prov_cont
-    (Provide\nkeystore files) as prov_ks
-    (Provide\nconfig file) as prov_cnf
+    (Blockchain node\n[We use\nganache-cli]) as prep_bc
+    (Peer ID provider\n[We use\nLocal file]) as prov_cont
+    (Wallet provider\n[We use\nKeystore files]) as prov_ks
+    (Node configuration) as prov_cnf
     (Start\nthe perun node) as start_perun
 }
 
